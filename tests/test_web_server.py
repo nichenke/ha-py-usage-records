@@ -1,13 +1,17 @@
-import logfire
-import pytest
-import time
-import threading
-import uvicorn
+"""Tests for the FastAPI web server"""
+
 import json
+import threading
+import time
+
+import pytest
+import uvicorn
+from requests import put
+
+import logfire
+
 from ha_usage_records.main import app
 from .test_usage_records import SAMPLE
-
-from requests import put
 
 logfire.configure(send_to_logfire=True)
 
@@ -50,6 +54,8 @@ def web_server():
 )
 def test_record_processing(web_server, record_count, expected_count):
     """Test processing records with parameterized count"""
+    # pylint: disable=W0621,W0613
+
     # Parse the sample JSON
     sample_data = json.loads(SAMPLE)
 
@@ -61,6 +67,7 @@ def test_record_processing(web_server, record_count, expected_count):
         "http://localhost:8000/usage",
         json=records_array,
         headers={"Content-Type": "application/json"},
+        timeout=5.0,  # Added timeout
     )
 
     assert response.status_code == 200
