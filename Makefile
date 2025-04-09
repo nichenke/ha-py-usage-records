@@ -9,7 +9,7 @@ test:
 
 # Run linting checks
 lint:
-	python -m black --check ha_usage_records/ tests/
+	python -m pylint ha_usage_records/ tests/
 
 # Format code
 format:
