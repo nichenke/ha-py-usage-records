@@ -45,8 +45,8 @@ async def log_requests(request: Request, call_next):
     # Log basic request info
     logfire.info("Request received", request_id=request_id, method=method, path=path)
 
-    # If it's a PUT request to /usage endpoint, save the body
-    if path == "/usage" and method == "PUT":
+    # If it's a POST request to /usage endpoint, save the body
+    if path == "/usage" and method == "POST":
         # Read request body
         body = await request.body()
 
