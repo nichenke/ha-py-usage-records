@@ -4,6 +4,7 @@ from fastapi import FastAPI
 import logfire
 from .usage_records import UsageRecord
 from datetime import datetime, timezone
+from typing import List, Dict
 
 app = FastAPI()
 
@@ -27,11 +28,13 @@ def read_root():
 
 
 @app.put("/usage")
-def put_usage(record: UsageRecord):
-    return {
-        "record.id": record.id,
-        "record.start_timestamp": format_datetime_with_z(record.start_timestamp),
-    }
+def put_usage(records: List[UsageRecord]) -> Dict[str, int]:
+    """Process multiple usage records and return only the count"""
+    # Process the records (you would typically save them to a database here)
+    record_count = len(records)
+
+    # Return just the count of records processed
+    return {"records_processed": record_count}
 
 
 if __name__ == "__main__":
