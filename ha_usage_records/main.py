@@ -12,9 +12,10 @@ from .usage_records import UsageRecord
 
 app = FastAPI()
 
-logfire.configure()
-# logfire.instrument_pydantic()
-logfire.instrument_fastapi(app)
+logfire.configure(service_name="ha_usage_records", send_to_logfire=True)
+# Uncomment the following lines to enable logging for Pydantic and FastAPI
+logfire.instrument_pydantic()
+logfire.instrument_fastapi(app, capture_headers=True, capture_query_params=True)
 
 
 def format_datetime_with_z(dt: datetime) -> str:
@@ -111,4 +112,4 @@ def put_usage(records: List[UsageRecord]) -> Dict[str, int]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

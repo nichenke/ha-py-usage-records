@@ -20,7 +20,7 @@ logfire.configure(send_to_logfire=True)
 def web_server():
     """Pytest fixture for starting the server in a background thread."""
     # Configure the server to run on a specific port
-    config = uvicorn.Config(app=app, host="127.0.0.1", port=8000, log_level="error")
+    config = uvicorn.Config(app=app, host="127.0.0.1", port=8080, log_level="error")
     server = uvicorn.Server(config=config)
 
     # Override server install_signal_handlers to do nothing
@@ -64,7 +64,7 @@ def test_record_processing(web_server, record_count, expected_count):
 
     # Send the array of records
     response = post(
-        "http://localhost:8000/usage",
+        "http://localhost:8080/usage",
         json=records_array,
         headers={"Content-Type": "application/json"},
         timeout=5.0,  # Added timeout

@@ -35,7 +35,7 @@ clean:
 
 # Run a local development server
 serve:
-	python -m uvicorn ha_usage_records.main:app --reload
+	python -m uvicorn ha_usage_records.main:app --reload --host 0.0.0.0 --port 8080
 
 # Docker targets
 DOCKER_IMAGE_NAME = ha-usage-records
@@ -47,11 +47,11 @@ docker-build:
 
 # Run Docker container
 docker-run:
-	docker run --rm -p 8000:8000 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
+	docker run --rm -p 8080:8080 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
 
 # Run Docker container in detached mode
 docker-run-detached:
-	docker run -d --rm -p 8000:8000 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
+	docker run -d --rm -p 8080:8080 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
 
 # Stop Docker container
 docker-stop:
