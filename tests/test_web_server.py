@@ -1,3 +1,4 @@
+import logfire
 import pytest
 import time
 import threading
@@ -7,6 +8,8 @@ from ha_usage_records.main import app
 from .test_usage_records import SAMPLE
 
 from requests import put
+
+logfire.configure(send_to_logfire=True)
 
 
 @pytest.fixture(scope="module")
