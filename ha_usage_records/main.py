@@ -98,7 +98,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.put("/usage")
+@app.post("/usage")
 def put_usage(records: List[UsageRecord]) -> Dict[str, int]:
     """Process multiple usage records and return only the count"""
     # Process the records (you would typically save them to a database here)

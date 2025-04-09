@@ -6,7 +6,7 @@ import time
 
 import pytest
 import uvicorn
-from requests import put
+from requests import post
 
 import logfire
 
@@ -63,7 +63,7 @@ def test_record_processing(web_server, record_count, expected_count):
     records_array = [sample_data] * record_count
 
     # Send the array of records
-    response = put(
+    response = post(
         "http://localhost:8000/usage",
         json=records_array,
         headers={"Content-Type": "application/json"},
