@@ -1,7 +1,5 @@
 from ha_usage_records.usage_records import UsageRecord
 
-import pytest
-
 SAMPLE = """
 {
     "imsi": "<imsi>",
