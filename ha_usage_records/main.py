@@ -15,7 +15,7 @@ app = FastAPI()
 logfire.configure(service_name="ha_usage_records", send_to_logfire=True)
 # Uncomment the following lines to enable logging for Pydantic and FastAPI
 logfire.instrument_pydantic()
-logfire.instrument_fastapi(app, capture_headers=True, capture_query_params=True)
+logfire.instrument_fastapi(app, capture_headers=True)
 
 
 def format_datetime_with_z(dt: datetime) -> str:
