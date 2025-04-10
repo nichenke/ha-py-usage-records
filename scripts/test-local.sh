@@ -15,12 +15,12 @@ response=$(curl -s -X POST \
 curl_exit_status=$?
 if [ $curl_exit_status -eq 0 ]; then
   echo "Data sent successfully."
-  
+
   # Check if jq is installed
   if command -v jq &> /dev/null; then
     # Use jq to parse and validate the response
     records_processed=$(echo $response | jq '.records_processed')
-    
+
     if [ "$records_processed" = "1" ]; then
       echo "✅ Validation successful: records_processed = 1"
     else
