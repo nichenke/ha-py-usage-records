@@ -11,7 +11,6 @@ import logfire
 from unittest import mock
 
 from ha_usage_records.main import app
-from .test_usage_records import SAMPLE
 
 logfire.configure(send_to_logfire=True)
 
@@ -60,15 +59,15 @@ def web_server():
     ],
     ids=["single_record", "multiple_records"],
 )
-def test_record_processing(web_server, record_count, expected_count):
+def test_record_processing(web_server, sample_data, record_count, expected_count):
     """Test processing records with parameterized count"""
     # pylint: disable=W0621,W0613
 
-    # Parse the sample JSON
-    sample_data = json.loads(SAMPLE)
+    # Parse the sample JSON from the fixture
+    sample_data_dict = json.loads(sample_data)
 
     # Create array with the specified number of records
-    records_array = [sample_data] * record_count
+    records_array = [sample_data_dict] * record_count
 
     # Send the array of records
     response = post(
@@ -87,15 +86,15 @@ def test_record_processing(web_server, record_count, expected_count):
     assert response_data["records_processed"] == expected_count
 
 
-def test_middleware_record_storage(web_server, records_dir):
+def test_middleware_record_storage(web_server, records_dir, sample_data):
     """Test that the middleware correctly stores records in the records directory."""
     # pylint: disable=W0621,W0613
 
     # Mock the RECORDS_DIR with our temporary directory
     with mock.patch("ha_usage_records.main.RECORDS_DIR", records_dir):
-        # Parse the sample JSON
-        sample_data = json.loads(SAMPLE)
-        records_array = [sample_data]
+        # Parse the sample JSON from the fixture
+        sample_data_dict = json.loads(sample_data)
+        records_array = [sample_data_dict]
 
         # Send a request to trigger the middleware
         response = post(
@@ -123,5 +122,5 @@ def test_middleware_record_storage(web_server, records_dir):
         assert len(stored_data) == 1
 
         # Verify key data points match what was sent
-        assert stored_data[0]["id"] == sample_data["id"]
-        assert stored_data[0]["imsi"] == sample_data["imsi"]
+        assert stored_data[0]["id"] == sample_data_dict["id"]
+        assert stored_data[0]["imsi"] == sample_data_dict["imsi"]

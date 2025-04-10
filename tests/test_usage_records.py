@@ -1,80 +1,29 @@
 """Tests for the usage records module"""
 
+import pytest
+
 from ha_usage_records.usage_records import UsageRecord
 
-SAMPLE = """
-{
-    "imsi": "<imsi>",
-    "organisation": {
-        "name": "8100xxxx",
-        "id": 1234
-    },
-    "start_timestamp": "2021-08-09T12:59:05Z",
-    "sim": {
-        "msisdn": "<msisdn>",
-        "iccid": "<icc>",
-        "id": 123456,
-        "production_date": "2018-04-17T15:01:50Z"
-    },
-    "currency": {
-        "id": 1,
-        "symbol": "€",
-        "code": "EUR"
-    },
-    "operator": {
-      "id": 2,
-      "name": "T-Mobile",
-      "mnc": "01",
-      "country": {
-        "id": 74,
-        "mcc": "262",
-        "name": "Germany"
-      }
-	},
-    "tariff": {
-        "ratezone": {
-            "name": "Rate Zone 2 (EU - DE)",
-            "id": 2067
-        },
-        "name": "1NCE Production 01",
-        "id": 398
-    },
-    "imsi_id": 1234567,
-    "traffic_type": {
-        "description": "Data",
-        "id": 5
-    },
-    "id": 1234567890,
-    "end_timestamp": "2021-08-09T12:51:20Z",
-    "endpoint": {
-        "tags": null,
-        "ip_address": "<ip_address>",
-        "name": "<name>",
-        "imei": "<imei>",
-        "id": 12345678,
-				"balance": null
-    },
-    "cost": 0.001176,
-    "volume": {
-        "total": 0.001176,
-        "tx": 0.001176,
-        "rx": 0.0
-    }
-}
-"""
+
+@pytest.fixture
+def usage_record(sample_data):
+    """Fixture that provides a parsed UsageRecord instance"""
+    return UsageRecord.model_validate_json(sample_data)
 
 
 def military_time(dt):
-    """convert datetime to military time"""
+    """Convert datetime to military time"""
     return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 MT = military_time
 
 
-def test_usage_record():
-    """test UsageRecord"""
-    record = UsageRecord.model_validate_json(SAMPLE)
+def test_usage_record(usage_record):
+    """Test UsageRecord parsing"""
+    # Now using the fixture instead of parsing SAMPLE directly
+    record = usage_record
+
     assert record.id == 1234567890
     assert record.imsi == "<imsi>"
     assert record.imsi_id == 1234567
