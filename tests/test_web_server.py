@@ -124,3 +124,52 @@ def test_middleware_record_storage(web_server, records_dir, sample_data):
         # Verify key data points match what was sent
         assert stored_data[0]["id"] == sample_data_dict["id"]
         assert stored_data[0]["imsi"] == sample_data_dict["imsi"]
+
+
+def test_bad_data_handling(web_server):
+    """Test how the API handles malformed input data."""
+    # pylint: disable=W0621
+
+    # Send non-JSON data to the endpoint
+    bad_data = "This is not valid JSON data"
+
+    # Send the bad data to the endpoint
+    response = post(
+        "http://localhost:8080/usage",
+        data=bad_data,  # Not using json parameter to avoid auto-formatting
+        headers={"Content-Type": "text/plain"},  # Intentionally incorrect content type
+        timeout=5.0,
+    )
+
+    # API should respond with an error status code
+    assert response.status_code == 422  # Unprocessable Entity
+
+    # Response should contain validation error details
+    error_detail = response.json()
+    assert "detail" in error_detail
+
+
+def test_invalid_json_structure(web_server):
+    """Test API's handling of JSON data that doesn't match the expected structure."""
+    # pylint: disable=W0621
+
+    # Valid JSON but wrong structure for our API
+    invalid_structure = {
+        "wrong_field": "This is not the right data structure",
+        "another_wrong_field": 123,
+    }
+
+    # Send the incorrectly structured data
+    response = post(
+        "http://localhost:8080/usage",
+        json=invalid_structure,  # This is valid JSON but wrong structure
+        headers={"Content-Type": "application/json"},
+        timeout=5.0,
+    )
+
+    # API should respond with an error status code
+    assert response.status_code == 422  # Unprocessable Entity
+
+    # Response should indicate a validation error
+    error_detail = response.json()
+    assert "detail" in error_detail

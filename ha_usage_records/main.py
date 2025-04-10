@@ -3,10 +3,10 @@
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import List, Dict
+from typing import List, Dict, Any
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 import logfire
 from .usage_records import UsageRecord
 
@@ -15,7 +15,7 @@ app = FastAPI()
 logfire.configure(service_name="ha_usage_records", send_to_logfire=True)
 # Uncomment the following lines to enable logging for Pydantic and FastAPI
 logfire.instrument_pydantic()
-logfire.instrument_fastapi(app, capture_headers=True)
+logfire.instrument_fastapi(app, capture_headers=True, record_send_receive=True)
 
 
 def format_datetime_with_z(dt: datetime) -> str:
@@ -32,6 +32,41 @@ RECORDS_DIR = Path("./records")
 RECORDS_DIR.mkdir(exist_ok=True)
 
 
+def save_request_body(body: bytes, request_id: str) -> None:
+    """Background task to save the request body to a file"""
+    try:
+        # Try to parse as JSON for prettier storage
+        body_json = json.loads(body)
+
+        # Create a timestamped filename for the record
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{timestamp}_{request_id}.json"
+        file_path = RECORDS_DIR / filename
+
+        # Save the request body to a file
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(body_json, f, indent=2)
+
+        logfire.info(
+            "Saved usage record", request_id=request_id, file_path=str(file_path)
+        )
+
+    except json.JSONDecodeError:
+        # If not valid JSON, save raw bytes
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{timestamp}_{request_id}.bin"
+        file_path = RECORDS_DIR / filename
+
+        with open(file_path, "wb") as f:
+            f.write(body)
+
+        logfire.warning(
+            "Saved non-JSON usage record",
+            request_id=request_id,
+            file_path=str(file_path),
+        )
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Middleware to log all incoming requests and save /usage requests to disk"""
@@ -45,42 +80,13 @@ async def log_requests(request: Request, call_next):
     # Log basic request info
     logfire.info("Request received", request_id=request_id, method=method, path=path)
 
-    # If it's a POST request to /usage endpoint, save the body
+    # If it's a POST request to /usage endpoint, capture the body
+    body = None
     if path == "/usage" and method == "POST":
-        # Read request body
         body = await request.body()
-
-        try:
-            # Try to parse as JSON for prettier storage
-            body_json = json.loads(body)
-
-            # Create a timestamped filename for the record
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{timestamp}_{request_id}.json"
-            file_path = RECORDS_DIR / filename
-
-            # Save the request body to a file
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(body_json, f, indent=2)
-
-            logfire.info(
-                "Saved usage record", request_id=request_id, file_path=str(file_path)
-            )
-
-        except json.JSONDecodeError:
-            # If not valid JSON, save raw bytes
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{timestamp}_{request_id}.bin"
-            file_path = RECORDS_DIR / filename
-
-            with open(file_path, "wb") as f:
-                f.write(body)
-
-            logfire.warning(
-                "Saved non-JSON usage record",
-                request_id=request_id,
-                file_path=str(file_path),
-            )
+        # Store the body in the request.state so we can access it in the endpoint
+        request.state.body = body
+        request.state.request_id = request_id
 
     # Process the request
     response = await call_next(request)
@@ -100,8 +106,16 @@ def read_root():
 
 
 @app.post("/usage")
-def put_usage(records: List[UsageRecord]) -> Dict[str, int]:
+async def put_usage(
+    records: List[UsageRecord], background_tasks: BackgroundTasks, request: Request
+) -> Dict[str, int]:
     """Process multiple usage records and return only the count"""
+    # If we have the raw body from the middleware, schedule saving it as a background task
+    if hasattr(request.state, "body") and hasattr(request.state, "request_id"):
+        background_tasks.add_task(
+            save_request_body, request.state.body, request.state.request_id
+        )
+
     # Process the records (you would typically save them to a database here)
     record_count = len(records)
 
