@@ -47,7 +47,7 @@ docker-build:
 
 # Run Docker container
 docker-run:
-	docker run --rm -p 8080:8080 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
+	docker run --rm -p 8080:8080 -v $(pwd)/records:/app/records --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
 
 # Run Docker container in detached mode
 docker-run-detached:

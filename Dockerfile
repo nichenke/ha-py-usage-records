@@ -22,6 +22,12 @@ COPY . .
 # Install dependencies
 RUN poetry install --no-dev
 
+# Create records directory and set permissions
+RUN mkdir -p /app/records && chmod 777 /app/records
+
+# Define a volume for persistent storage of records
+VOLUME ["/app/records"]
+
 # Expose the port the app runs on
 EXPOSE 8080
 
