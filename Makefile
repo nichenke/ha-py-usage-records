@@ -1,4 +1,4 @@
-.PHONY: test lint format check clean docker-build docker-run docker-clean
+.PHONY: test lint format check clean docker-build docker-run docker-clean test-local
 
 # Default target
 all: lint test
@@ -47,11 +47,11 @@ docker-build:
 
 # Run Docker container
 docker-run:
-	docker run --rm -p 8080:8080 -v $(pwd)/records:/app/records --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
+	docker run --rm -p 8080:8080 -v $(PWD)/records:/app/records --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
 
 # Run Docker container in detached mode
 docker-run-detached:
-	docker run -d --rm -p 8080:8080 --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
+	docker run -d --rm -p 8080:8080 -v $(PWD)/records:/app/records --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME)
 
 # Stop Docker container
 docker-stop:
@@ -61,3 +61,8 @@ docker-stop:
 docker-clean:
 	docker stop $(DOCKER_CONTAINER_NAME) 2>/dev/null || true
 	docker rmi $(DOCKER_IMAGE_NAME) 2>/dev/null || true
+
+# Run the test script against a local running instance
+test-local:
+	@echo "Running test script against local instance..."
+	bash scripts/test-local.sh
